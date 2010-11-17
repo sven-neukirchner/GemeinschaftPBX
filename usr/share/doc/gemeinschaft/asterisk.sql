@@ -7667,3 +7667,58 @@ USE `asterisk`;
 
 -- Dump completed on 2010-10-19 19:30:00
 
+
+
+
+--
+-- Table structure for table `specialrules`
+--
+
+DROP TABLE IF EXISTS `specialrules`;
+CREATE TABLE `specialrules` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(255) collate utf8_unicode_ci NOT NULL,
+  `description` varchar(255) collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+
+
+--
+-- Dumping data for `specialrules`
+--
+
+INSERT INTO `specialrules` (`id`, `title`, `description`) VALUES
+(1, 'Hello World', 'Testansage');
+
+
+--
+-- Table structure for table `specialrules_lines`
+--
+
+DROP TABLE IF EXISTS `specialrules_lines`;
+CREATE TABLE `specialrules_lines` (
+  `id` int(11) NOT NULL auto_increment,
+  `rule_id` int(11) NOT NULL,
+  `ord` int(11) NOT NULL,
+  `line` varchar(255) collate utf8_unicode_ci NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
+
+
+--
+-- Dumping data for `specialrules_lines`
+--
+
+INSERT INTO `specialrules_lines` (`id`, `rule_id`, `ord`, `line`) VALUES
+(1, 1, 6, 'Playback(hello-world)'),
+(2, 1, 4, 'Playback(beep)'),
+(3, 1, 5, 'Wait(2)');
+
+
+--
+-- Alter table `routes_in` for specialrules
+--
+
+ALTER TABLE `routes_in` ADD `s_rule` SMALLINT( 5 ) NOT NULL DEFAULT '0' AFTER `h_to` ;
+
+

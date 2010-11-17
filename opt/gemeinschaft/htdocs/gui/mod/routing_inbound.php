@@ -146,6 +146,7 @@ elseif ($action == 'save') {
 	`d_su`='. ((int)(bool)@$_REQUEST['r_'.$dbid.'_d_su']) .',
 	`h_from`=\''. $DB->escape($h_from) .'\',
 	`h_to`=\''  . $DB->escape($h_to  ) .'\',
+    `s_rule`='. ((int)@$_REQUEST['r_'.$dbid.'_s_rule']) .',
 	`to_ext`=\''. $DB->escape(trim(@$_REQUEST['r_'.$dbid.'_to_ext'])) .'\',
 	`descr`=\''. $DB->escape(trim(@$_REQUEST['r_'.$dbid.'_descr'])) .'\'
 '. ($dbid>0 ? 'WHERE `id`='. (int)$dbid : '')
@@ -263,6 +264,7 @@ if ($action === 'edit') {
 	<th><?php echo __('Uhrzeit'); ?></th>
 	<th><?php echo __('Muster'); ?><sup>[1]</sup></th>
 	<th><?php echo __('Ziel'); ?></th>
+    <th><?php echo __('Sonderregel'); ?></th>
 	<th style="width:20em;"><?php echo __('Beschreibung'); ?></th>
 	<th><?php echo __('Reihenfolge'); ?></th>
 </tr>
@@ -270,12 +272,28 @@ if ($action === 'edit') {
 <tbody>
 
 <?php
+
+
+     $rs = $DB->execute(
+'SELECT `id`, `title`
+ FROM `specialrules`
+ ORDER BY `title`'
+);
+$specialrules = array();
+while ($r = $rs->fetchRow()) {
+    $specialrules[(int)$r['id']] = array(
+        'title'      => $r['title'],
+        'title_html' => htmlEnt($r['title'])
+
+    );
+}
+
 	
 	$rs = $DB->execute(
 'SELECT
 	`id`, `active`, `pattern`,
 	`d_mo`, `d_tu`, `d_we`, `d_th`, `d_fr`, `d_sa`, `d_su`, `h_from`, `h_to`,
-	`to_ext`, `descr`
+	`to_ext`,  `s_rule`,  `descr`
 FROM `routes_in`
 WHERE `gate_grp_id`='. $ggid .'
 ORDER BY `ord`'
@@ -346,6 +364,15 @@ ORDER BY `ord`'
 		
 		echo '<td>';
 		echo '<input type="text" name="r_',$id,'_to_ext" value="', htmlEnt($route['to_ext']), '" size="10" maxlength="10" class="pre" style="font-weight:bold;" />';
+		echo '</td>', "\n";
+		
+		echo '<td>';
+		echo '<select name="r_',$id,'_s_rule" style="width:100px">', "\n";
+		echo '<option value=""', ($route['s_rule'] == 0  ? ' selected="selected"' : ''), '>', '-', '</option>', "\n";
+		foreach ($specialrules as $s_rule_id => $sr) {
+			echo '<option value="', $s_rule_id, '"', ($s_rule_id == $route['s_rule'] ? ' selected="selected"' : ''), '>', $sr['title_html'], '</option>', "\n";
+		}
+		echo '</select><br />', "\n";
 		echo '</td>', "\n";
 		
 		echo '<td>';
@@ -421,6 +448,15 @@ ORDER BY `ord`'
 	echo '</td>', "\n";
 	
 	echo '<td>';
+	echo '<select name="r_',$id,'_s_rule" style="width:100px">', "\n";
+	echo '<option value=""', ($route['s_rule'] == 0  ? ' selected="selected"' : ''), '>', '-', '</option>', "\n";
+	foreach ($specialrules as $s_rule_id => $sr) {
+		echo '<option value="', $s_rule_id, '"', ($s_rule_id == $route['s_rule'] ? ' selected="selected"' : ''), '>', $sr['title_html'], '</option>', "\n";
+	}
+	echo '</select><br />', "\n";
+	echo '</td>', "\n";
+	
+	echo '<td>';
 	echo '<input type="text" name="r_',$id,'_descr" id="ipt-r_',$id,'_descr" value="" size="25" maxlength="60" style="width:97%;" />';
 	echo '</td>', "\n";
 	
@@ -478,6 +514,10 @@ ORDER BY `ord`'
 	
 	echo '<td class="transp">';
 	echo '<input type="text" value="$1" size="10" maxlength="10" class="pre" disabled="disabled" />';
+	echo '</td>', "\n";
+	
+	echo '<td class="transp">';
+	echo '<input type="text" value="-" size="10" maxlength="10" class="pre" disabled="disabled" />';
 	echo '</td>', "\n";
 	
 	echo '<td class="transp">';

@@ -1281,4 +1281,10 @@ context default {
 
 #include "/etc/gemeinschaft/asterisk/extensions-from-internal-custom.ael"
 
+//---------------------------------------------------------------------
+//  Contexts for specialrules
+//---------------------------------------------------------------------
+
+#exec "/opt/gemeinschaft/etc/asterisk/e-specialrules.ael.php"
+
 

@@ -274,7 +274,8 @@ $MODULES['admin'    ]=  array(
 		'wakeupcall'   => array('title' => __('Weckruf'), 'id' => 15014),
 		'calls'        => array('title' => __('CDRs'), 'id' => 15009),
 		'reload'       => array('title' => __('Reload'), 'id' => 15010),
-		'sysrecs'      => array('title' => __('Audiodateien'), 'id' => 15011)
+		'sysrecs'      => array('title' => __('Audiodateien'), 'id' => 15011),
+		'specialrules' => array('title' => __('Sonderregeln'), 'id' => 15013)
 	)
 );
 if (gs_get_conf('GS_BOI_ENABLED')) {

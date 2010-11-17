@@ -298,6 +298,7 @@ context to-internal-users {
 		//	Set(__is_from_gateway=);
 		//}
 		&pass-connid();
+		&pass-specialrule();
 		&check-valid-extension(${EXTEN});
 		if ("${dial_to_node}" = "") {
 			Verbose(1,### Extension ${EXTEN} is at node: SELF);

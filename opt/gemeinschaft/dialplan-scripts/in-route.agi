@@ -94,7 +94,7 @@ gs_agi_set_variable( 'cid_fixed', $cid );
 $now = time();
 $hms = date('H:i:s', $now);
 $rs = $db->execute(
-'SELECT `id`, `pattern`, `to_ext`
+'SELECT `id`, `pattern`, `s_rule`, `to_ext`
 FROM `routes_in`
 WHERE
 	`gate_grp_id`='. $ggrp_id .' AND
@@ -112,7 +112,7 @@ while ($route = $rs->fetchRow()) {
 
 # add special 1:1 identity DID -> extension route
 # (can be disabled by adding a route to an empty extension as the last rule)
-$routes[] = array( 'id'=>0, 'pattern' => '^(.*)', 'to_ext' => '$1' );
+$routes[] = array( 'id'=>0, 'pattern' => '^(.*)', 's_rule'=>'0', 'to_ext' => '$1' );
 
 foreach ($routes as $route) {
 	$route['pattern'] = trim($route['pattern']);
@@ -123,9 +123,14 @@ foreach ($routes as $route) {
 			gs_agi_verbose( "### Matching route for $number is default 1:1 DID->extension route" );
 		$number = @preg_replace('/'.$route['pattern'].'/', trim($route['to_ext']), $number);
 		break;
+         # check if specialrule is set
+         if ($route['s_rule'] !== 0)
+            gs_agi_verbose( "### Matching route has specialrule id ". $route['s_rule'] );
+        break;
 	}
 }
 gs_agi_set_variable( 'did_ext_to', $number );
+gs_agi_set_variable( 'specialrule_id', $route['s_rule'] );
 
 
 
