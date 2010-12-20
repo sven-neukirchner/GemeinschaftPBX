@@ -86,11 +86,11 @@ if ($action === 'del') {
 #                               save {
 #####################################################################
 if ($action === 'save') {
-	/*
+   /*
 	echo "<pre>\n";
 	print_r($_REQUEST);
 	echo "</pre>\n";
-	*/
+   */	
 	
 	$name = preg_replace('/[^0-9]/', '', @$_REQUEST['name']);
 	$title = trim(@$_REQUEST['_title']);
@@ -99,6 +99,8 @@ if ($action === 'save') {
 	$announce_holdtime = @$_REQUEST['announce_holdtime'];
 	if (! in_array($announce_holdtime, array('yes', 'once', 'no'), true))
 		$announce_holdtime = 'yes';
+	$announce_frequency = (int)@$_REQUEST['announce_frequency'];
+	if ($announce_frequency < 0) $announce_frequency = 0;	
 	$wrapuptime = (int)@$_REQUEST['wrapuptime'];
 	if ($wrapuptime < 1) $wrapuptime = 0;
 	$timeout = (int)@$_REQUEST['timeout'];
@@ -141,6 +143,7 @@ if ($action === 'save') {
 	`musicclass`='. $musicclass_db .',
 	`_sysrec_id`='. $salutation .',
 	`announce_holdtime`=\''. $announce_holdtime .'\',
+	`announce_frequency`=\''. $announce_frequency .'\',
 	`wrapuptime`='. $wrapuptime .',
 	`timeout`='. $timeout .',
 	`strategy`=\''. $strategy .'\',
@@ -299,7 +302,7 @@ FROM
 	if ($queue_id > 0) {
 		$rs = $DB->execute(
 'SELECT
-	`name`, `_host_id`, `_title`, `musicclass`, `_sysrec_id`, `announce_holdtime`, `timeout`, `wrapuptime`, `maxlen`, `strategy`, `joinempty`, `leavewhenempty`, `_min_agents`
+	`name`, `_host_id`, `_title`, `musicclass`, `_sysrec_id`, `announce_holdtime`, `announce_frequency`, `timeout`, `wrapuptime`, `maxlen`, `strategy`, `joinempty`, `leavewhenempty`, `_min_agents`
 FROM
 	`ast_queues`
 WHERE
@@ -318,6 +321,7 @@ WHERE
 			'musicclass'                 => 'default',
 			'_sysrec_id'                 => 0,
 			'announce_holdtime'          => 'yes',
+			'announce_frequency'         => '90',
 			'wrapuptime'                 => 5,
 			'maxlen'                     => 255,
 			'timeout'                    => 10,
@@ -413,6 +417,8 @@ WHERE
 		echo '<td class="transp xs gray"><code>musicclass</code> / <code>Queue(,r)</code></td>',"\n";
 		echo '</tr>',"\n";
 		
+		
+		
 		echo '<tr>',"\n";
 		echo '<th class="r">', __('Wartezeit ansagen') ,'</th>',"\n";
 		echo '<td>',"\n";
@@ -433,8 +439,18 @@ WHERE
 		echo '<label for="ipt-announce_holdtime-no">', __('nein') ,'</label>', "\n";
 		
 		echo '</td>';
-		echo '<td class="transp xs gray"><code>announce_holdtime = </code><code>yes</code> | <code>once</code> | <code>no</code></td>',"\n";
+		echo '<td class="transp xs gray"><code>announce-holdtime = </code><code>yes</code> | <code>once</code> | <code>no</code></td>',"\n";
 		echo '</tr>',"\n";
+		
+		echo '<tr>',"\n";
+		echo '<th class="r">', __('Warteposition ansagen') ,'</th>',"\n";
+		echo '<td>';
+		echo '<input type="text" name="announce_frequency" value="', $queue['announce_frequency'] ,'" size="3" maxlength="3" class="r" /> s', "\n";
+		echo '</td>';
+		echo '<td class="transp xs gray"><code>announce-frequency (0 = aus)</code></td>',"\n";
+		echo '</tr>',"\n";
+		
+		
 		
 		echo '<tr>',"\n";
 		echo '<th class="r">', __('Nachbereitungszeit') ,'</th>',"\n";
