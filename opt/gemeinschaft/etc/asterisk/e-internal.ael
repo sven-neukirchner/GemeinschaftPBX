@@ -1069,6 +1069,7 @@ context to-internal-users-self {
 					Progress();  // SIP: "183 Session Progress" with early media
 				}
 				Set(queue_entertime=${EPOCH});
+				Set(queue_exten=${EXTEN});
 				Queue(${EXTEN},${ring_instead_of_moh},,,${queuetimeout},/opt/gemeinschaft/dialplan-scripts/dial-log-store-queue);
 				Set(queue_waittime=$[${EPOCH}-${queue_entertime}]);
 				Verbose(1,### Tried to enter queue ${EXTEN}\, result: ${QUEUESTATUS}\, waittime: ${queue_waittime});
@@ -1311,6 +1312,17 @@ context to-internal-users-self {
 					&dial-log-store(${CALLERID(dnid)},${type},${CALLERID(num)});
 			}
 		}
+        if ("${exttype}" = "queue") {
+
+           if ("${MEMBERINTERFACE}" != "") {
+             Set(user_name=${CUT(MEMBERINTERFACE,/,2)});
+             Verbose(1,### Agent on ${MEMBERINTERFACE} goes on review);
+             Set(review_start=${EPOCH});
+             TrySystem(/opt/gemeinschaft/dialplan-scripts/agent-set-review '${user_name}' '${review_start}' '${UNIQUEID}');
+             PauseQueueMember(,${MEMBERINTERFACE});
+             System(echo  "${review_start}|${UNIQUEID}|${QUEUE_EXTEN}|${MEMBERINTERFACE}|REVIEW_START|||fake|" >> /var/log/asterisk/queue_log );
+          }
+         }
 	}
 	
 }

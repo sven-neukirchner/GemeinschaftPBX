@@ -579,6 +579,77 @@ context queues-login-logout {
 	_*5XXXXXX* => &queue-logout(${EXTEN:2:-1});
 }
 
+//---------------------------------------------------------------------
+//  Agent Pause/Unpause
+//---------------------------------------------------------------------
+
+macro agent-pause() {
+
+	Answer();
+	Verbose(1,### Agent on Interface ${MEMBERINTERFACE} wants to pause);
+	AGI(/opt/gemeinschaft/dialplan-scripts/agent-pause-unpause.agi,${user_name},pause,${EPOCH});
+
+	Verbose(1,### Last agent state: ${last_agent_state} );
+	Verbose(1,### New agent state: ${new_agent_state} );
+	Verbose(1,### Time on review: ${review_start} );
+	Verbose(1,### Queue: ${answered_queue} );
+	Verbose(1,### Call ID on review start: ${call_id_on_review} );
+
+	if ("${last_agent_state}" = "1") {   // agent was online
+		Verbose(1,### Agent was ONLINE and is now in PAUSE);
+		PauseQueueMember(,SIP/${user_name});
+	}
+	if ("${last_agent_state}" = "2") {   // agent was in pause
+		Verbose(1,### Agent is already in PAUSE nothing todo);
+	}
+	if ("${last_agent_state}" = "3") {   // agent was in review
+		Verbose(1,### Agent was on REVIEW and is now in PAUSE);
+		System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||fake|" >> /var/log/asterisk/queue_log );
+	}
+
+	Playback(/usr/share/asterisk/sounds/custom/pause);
+	Hangup();
+
+}
+
+macro agent-unpause() {
+
+	Answer();
+	Verbose(1,### Agent on Interface ${MEMBERINTERFACE} wants to pause);
+	AGI(/opt/gemeinschaft/dialplan-scripts/agent-pause-unpause.agi,${user_name},unpause,${EPOCH});
+
+	Verbose(1,### Last agent state: ${last_agent_state} );
+	Verbose(1,### New agent state: ${new_agent_state} );
+	Verbose(1,### Time on review: ${review_start} );
+	Verbose(1,### Queue: ${answered_queue} );
+	Verbose(1,### Call ID on review start: ${call_id_on_review} );
+
+	if ("${last_agent_state}" = "1") {   // agent is already online
+	Verbose(1,### Agent is already ONLINE nothing todo);
+	}
+	if ("${last_agent_state}" = "2") {   // agent was in pause
+	Verbose(1,### Agent was in PAUSE and is now Online);
+	UnpauseQueueMember(,SIP/${user_name});
+	}
+	if ("${last_agent_state}" = "3") {   // agent was in review
+	Verbose(1,### Agent was in REVIEW and is now Online);
+	System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||fake|" >> /var/log/asterisk/queue_log );
+	UnpauseQueueMember(,SIP/${user_name});
+	}
+
+	Playback(/usr/share/asterisk/sounds/custom/pause-beendet);
+	Hangup();
+
+}
+
+
+context agents-pause-unpause {
+
+	*6 => &agent-pause();
+	*6* => &agent-unpause();
+
+}
+
 
 //---------------------------------------------------------------------
 //  Voicemailbox
@@ -1035,6 +1106,7 @@ context from-internal-users {
 		private-call;         // private calls
 		user-config;          // user's configuration
 		queues-login-logout;  // queue login/logout
+		agents-pause-unpause;
 		to-conferences;       // conferences
 		to-internal-nobody;   // internal phones (nobodies)
 		to-internal-users;    // internal phones (users)

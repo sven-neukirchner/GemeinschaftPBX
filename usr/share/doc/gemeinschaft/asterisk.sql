@@ -7710,3 +7710,22 @@ INSERT INTO `specialrules_lines` (`id`, `rule_id`, `ord`, `line`) VALUES
 ALTER TABLE `routes_in` ADD `s_rule` SMALLINT( 5 ) NOT NULL DEFAULT '0' AFTER `h_to` ;
 
 
+--
+-- Table structure for table `agent_state`
+--
+
+CREATE TABLE IF NOT EXISTS `agent_state` (
+  `_user_id` int(10) unsigned NOT NULL DEFAULT '0',
+  `queue_name` varchar(20) CHARACTER SET ascii NOT NULL,
+  `timestamp` int(10) unsigned NOT NULL DEFAULT '0',
+  `ast_call_id` varchar(32) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  `interface` varchar(25) CHARACTER SET ascii NOT NULL DEFAULT '',
+  `state` int(10) NOT NULL DEFAULT '0',
+  KEY `_user_id` (`_user_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+
+
+
+

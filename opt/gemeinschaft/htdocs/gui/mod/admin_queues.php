@@ -204,7 +204,22 @@ if ($action === 'delstatic') {
 			'`_user_id` = '.$agent_id. ' AND '.
 			'`static` = 1'
 		);
+		// also delete agent status if thi is agents last queue
+		$agent_queues = $DB->executeGetOne(
+			'SELECT COUNT(*) `_user_id` FROM `ast_queue_members`'.
+			' WHERE '.
+			'`_user_id` = '.$agent_id. ''
+		);
+		if ($agent_queues == 0) {
+			$DB->execute(
+				'DELETE FROM `agent_state` '.
+				'WHERE'.
+				'`_user_id`='. $agent_id
+			);
+		}
+		// end delete agent status//
 	}
+
 	$action = 'edit';
 
 }
@@ -245,6 +260,22 @@ if ($action === 'addstatic') {
 				'`_queue_id` ='.$queue_id. ', '.
 				'`static` = 1, `penalty`='.$penalty
 				);
+				// add agent status if first queue for agent
+				$agent_queues = $DB->executeGetOne(
+					'SELECT COUNT(*) `_user_id` FROM `ast_queue_members`'.
+					' WHERE '.
+					'`_user_id` = '.$agent_id. ''
+				);
+				if ($agent_queues == 1) {
+				$DB->execute(
+					'INSERT INTO `agent_state` SET
+					`interface` = \''. $DB->escape($interface) .'\',
+					`_user_id`='. $agent_id. ',
+					`state`=1'
+					);
+				}
+				// end  add agent status//
+
 				} else {
 					echo '<div class="errorbox">';
 					echo __('User oder Warteschlange ung&uuml;ltig!');

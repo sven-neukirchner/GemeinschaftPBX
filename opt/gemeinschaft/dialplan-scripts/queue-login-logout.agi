@@ -97,6 +97,12 @@ if ($action === 'login') {
 	}
 	gs_agi_set_variable( 'agent_login_status', 'loggedin' );
 	
+	// check if agent is already on one queue and set agent state
+	$num_agent_queues = (int)$db->executeGetOne( 'SELECT COUNT(*) FROM `ast_queue_members` WHERE `_user_id`='. $user_id);
+	gs_agi_verbose('##### Agent is loggedin on ' .$num_agent_queues.' queues' , 1);
+	if ($num_agent_queues == 1) {
+		$db->execute( 'INSERT INTO `agent_state` (`_user_id`, `interface`, `state`) VALUES ('. $user_id .', \''. $db->escape( 'SIP/'. $user ) .'\', 1)' );
+	}
 }
 elseif ($action === 'logout') {
 		// Tell user that he can NOT log out, because he is a static agent
@@ -107,6 +113,13 @@ elseif ($action === 'logout') {
 		if ($agent_on > $min_agent) {
 			$db->execute( 'DELETE FROM `ast_queue_members` WHERE `_queue_id`='. $queue_id .' AND `_user_id`='. $user_id );
 			gs_agi_set_variable( 'agent_login_status', 'loggedout' );
+
+			// check if this is agents last queue and delete agent state
+			$num_agent_queues = (int)$db->executeGetOne( 'SELECT COUNT(*) FROM `ast_queue_members` WHERE `_user_id`='. $user_id);
+			gs_agi_verbose('##### Agent is loggedin on ' .$num_agent_queues.' queues' , 1);
+			if ($num_agent_queues == 0) {
+				$db->execute( 'DELETE FROM `agent_state` WHERE `_user_id`='. $user_id );
+			}
 		} else {
 			exit();
 		}
@@ -143,6 +156,8 @@ elseif ($action === 'logoutall') {
 	// Only O.K. if all logoffs did work
 	if ($logoff_ok === 0) {
 	gs_agi_set_variable( 'agent_login_status', 'loggedout' );
+	//delete agent state
+	$db->execute( 'DELETE FROM `agent_state` WHERE `_user_id`='. $user_id );
 	}
 	$ami->ami_logout();
 }

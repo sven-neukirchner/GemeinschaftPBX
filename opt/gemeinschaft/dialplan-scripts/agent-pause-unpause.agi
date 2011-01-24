@@ -1,0 +1,136 @@
+#!/usr/bin/php -q
+<?php
+/*******************************************************************\
+*            Gemeinschaft - asterisk cluster gemeinschaft
+* 
+* $Revision: 4817 $
+* 
+* Copyright 2007, amooma GmbH, Bachstr. 126, 56566 Neuwied, Germany,
+* http://www.amooma.de/
+*
+* Author: Sven Neukirchner <s.neukirchner@konabi.de>
+*
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+* MA 02110-1301, USA.
+\*******************************************************************/
+
+define( 'GS_VALID', true );  /// this is a parent file
+require_once( dirName(__FILE__) .'/../inc/conf.php' );
+require_once( GS_DIR .'inc/agi-fns.php' );
+
+
+ini_set('implicit_flush', 1);
+ob_implicit_flush(1);
+
+
+/*
+ob_start();
+print_r($_SERVER);
+$out = ob_get_clean();
+fWrite(STDERR,$out);
+*/
+
+$user       = trim(@$argv[1]);
+$action     = trim(@$argv[2]);
+$now        = trim(@$argv[3]); 
+
+
+if (! preg_match('/^\d+$/', $user))  // is not just digits
+	gs_agi_err( 'Invalid user extension' );
+if (! in_array( $action, array('pause','unpause'), true ))
+	gs_agi_err( 'Invalid action argument' );
+if (! preg_match('/^\d+$/', $now))  // is not just digits   
+	 gs_agi_err( 'Invalid timestamp' ); 	
+
+
+include_once( GS_DIR .'inc/db_connect.php' );
+$db = gs_db_master_connect();
+
+
+# get user id
+#
+$user_id = (int)$db->executeGetOne( 'SELECT `_user_id` FROM `ast_sipfriends` WHERE `name`=\''. $db->escape($user) .'\'' );
+if ($user_id < 1) gs_agi_err( 'User not found' );  
+
+# get user's host id
+#
+$user_host_id = (int)$db->executeGetOne( 'SELECT `host_id` FROM `users` WHERE `id`='. $user_id );
+if ($user_host_id < 1) gs_agi_err( 'Host not found' );
+
+
+# get agent state
+#
+$rs = $db->execute( 'SELECT `state`,`ast_call_id`, `queue_name`, `timestamp`  FROM `agent_state` WHERE `_user_id`='. $user_id );
+$agentinfo = $rs->getRow();
+if (! $agentinfo) gs_agi_err( 'Unable to get agentinfo' );   
+  
+$last_agent_state	=  $agentinfo['state'];
+$last_call_id		=  $agentinfo['ast_call_id'];   
+$last_queue			=  $agentinfo['queue_name'];
+$review_start		=  $agentinfo['timestamp'];                      
+
+
+if ($action == 'pause') {
+  	
+   $new_agent_state = 2; 
+   
+   if ($last_agent_state == 1) //agent was online
+   {
+   	$rs = $db->execute( 'UPDATE `agent_state` SET `state`='. $new_agent_state .', `timestamp`='. $now .', `queue_name`=0, `ast_call_id`=0   WHERE `_user_id`='. $user_id );
+    if(! @$rs) gs_agi_err( 'Coult not set new agent status' );  	   
+   }
+   
+   if ($last_agent_state == 3) // agent was in review
+   {
+	$rs = $db->execute( 'UPDATE `agent_state` SET `state`='. $new_agent_state .', `timestamp`='. $now .', `queue_name`=0, `ast_call_id`=0   WHERE `_user_id`='. $user_id );
+    if(! @$rs) gs_agi_err( 'Coult not set new agent status' );  
+   }
+   
+ 
+	
+}
+
+if ($action == 'unpause') {
+	
+	$new_agent_state = 1;
+	
+	if ($last_agent_state == 2) //agent was in pause
+    {
+	 $rs = $db->execute( 'UPDATE `agent_state` SET `state`='. $new_agent_state .', `timestamp`='. $now .', `queue_name`=0, `ast_call_id`=0   WHERE `_user_id`='. $user_id );
+     if(! @$rs) gs_agi_err( 'Coult not set new agent status' );  	   
+	}
+   
+   	if ($last_agent_state == 3) // agent was in review
+   	{
+	 $rs = $db->execute( 'UPDATE `agent_state` SET `state`='. $new_agent_state .', `timestamp`='. $now .', `queue_name`=0, `ast_call_id`=0   WHERE `_user_id`='. $user_id );
+     if(! @$rs) gs_agi_err( 'Coult not set new agent status' );  
+	}
+	
+	
+}
+
+echo 'SET VARIABLE last_agent_state '. gs_agi_str_esc($last_agent_state) ."\n"; 
+echo 'SET VARIABLE new_agent_state '. gs_agi_str_esc($new_agent_state) ."\n";  
+
+echo 'SET VARIABLE answered_queue '. gs_agi_str_esc($last_queue) ."\n";
+echo 'SET VARIABLE review_start '. gs_agi_str_esc($review_start) ."\n";  
+echo 'SET VARIABLE call_id_on_review '. gs_agi_str_esc($last_call_id) ."\n";    
+
+    
+  
+
+
+?>
