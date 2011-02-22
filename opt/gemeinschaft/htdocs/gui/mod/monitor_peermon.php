@@ -30,6 +30,7 @@ defined('GS_VALID') or die('No direct access.');
 include_once( GS_DIR .'inc/group-fns.php' );
 require_once( GS_DIR .'inc/mongr.php');
 include_once( GS_DIR .'inc/gs-fns/gs_callforward_get.php');
+include_once( GS_DIR .'inc/gs-fns/gs_agentstate_get.php');
 
 define( 'GS_EXT_UNKNOWN',	255); # unknown status
 define( 'GS_EXT_IDLE',		0);  # all devices idle (but registered)
@@ -40,6 +41,8 @@ define( 'GS_EXT_RINGING',	8);  # one or more devices ringing
 define( 'GS_EXT_RINGINUSE',	9);  # ringing and in use
 define( 'GS_EXT_ONHOLD',	16); # all devices on hold
 define( 'GS_EXT_FWD',		32); # forwarding active
+define( 'GS_EXT_PAUSE',	64); # agent in pause (agent state 2)
+define( 'GS_EXT_REWORK',	128); # agent on Rework (agent state 3)
 
 define( 'ST_FREE',		'#fffd3b');
 define( 'ST_INUSE',		'#00fd02');
@@ -49,6 +52,8 @@ define( 'ST_RINGINUSE',		'#0080FF');
 define( 'ST_UNKNOWN',		'#ff5c43');
 define( 'ST_ONHOLD',		'#fd02fd');
 define( 'ST_FWD',		'#0002fd');
+define( 'ST_PAUSE',		'#fd8005');
+define( 'ST_REWORK',		'#05fdba');
 
 define( 'CQ_DESKTOP_BG',	'#ffffff');
 define( 'CQ_WINDOW_BG',		'#d4d0c7');
@@ -127,8 +132,14 @@ $user_id = @$_SESSION['sudo_user']['info']['id'];
 
 if (!$user_id) exit;
 
+// groups of user member
 $user_groups  = gs_group_members_groups_get(Array($user_id), 'user');
+// monitor groups of user
 $monitor_group_ids = gs_group_permissions_get($user_groups, 'monitor_peers', 'user');
+
+//echo '<pre>';
+//print_r($monitor_group_ids);
+//echo '</pre>';
 
 if ($action == 'save') {
 
@@ -139,24 +150,26 @@ if ($action == 'save') {
 			$colors[$status] = trim($_REQUEST['ec'.$status]);
 		}
 	}
+//	echo '<pre>';
+//	print_r($colors);
+//	echo '</pre>';
 
 	$groups = array();
 
 	foreach ($monitor_group_ids as $group_id) {
 		$group = array();
 
+		// group of window
 		if (array_key_exists('qa'.$group_id, $_REQUEST) && $_REQUEST['qa'.$group_id] == "on")
 			$group['active'] = 1;
 		else
 			$group['active'] = 0;
-
 		if (array_key_exists('qw'.$group_id, $_REQUEST))
 			$group['display_width'] = (int)$_REQUEST['qw'.$group_id];
 		if (array_key_exists('qh'.$group_id, $_REQUEST))
 			$group['display_height'] = (int)$_REQUEST['qh'.$group_id];
 		if (array_key_exists('qx'.$group_id, $_REQUEST))
 			$group['display_columns'] = (int)$_REQUEST['qx'.$group_id];
-
 		if (array_key_exists('qcx'.$group_id, $_REQUEST))
 			$group['display_extension'] = (int)$_REQUEST['qcx'.$group_id];
 		if (array_key_exists('qcn'.$group_id, $_REQUEST))
@@ -229,6 +242,10 @@ $extmon_data['reload'] = 120;
 $extmon_data['tabs'] = False;
 $extmon_data['tabs_groups'] = array();
 
+//echo "<pre>";
+//print_r($rs);
+//echo "</pre>";
+
 if ($rs->numRows() == 1) {
 	$r = $rs->fetchRow();
 	foreach ($r as $key => $value) {
@@ -251,6 +268,10 @@ foreach ($groups_array as $group) {
 }
 
 unset($groups_array);
+
+//echo "<pre>";
+//print_r($group);
+//echo "</pre>";
 
 $sql_query =
 'SELECT
@@ -284,14 +305,16 @@ if ($extmon_data['tabs'] === True) {
 }
 
 $color_names = array(
-	GS_EXT_UNKNOWN 		=> _('unbekannt'),
+	GS_EXT_UNKNOWN		=> _('unbekannt'),
 	GS_EXT_IDLE		=> _('frei'),
-	GS_EXT_INUSE		=> _('anruf'),
+	GS_EXT_INUSE		=> _('Anruf'),
 	GS_EXT_BUSY		=> _('besetzt'),
 	GS_EXT_OFFLINE		=> _('offline'),
 	GS_EXT_RINGING		=> _('klingelt'),
 	GS_EXT_RINGINUSE	=> _('anklopfen'),
 	GS_EXT_ONHOLD		=> _('halten'),
+	GS_EXT_PAUSE		=> _('Pause'),
+	GS_EXT_REWORK		=> _('Nacharbeit'),
 	GS_EXT_FWD		=> _('Umleitung aktiv')
 );
 
@@ -304,6 +327,8 @@ $colors = array(
 	GS_EXT_RINGING		=> ST_RINGING,
 	GS_EXT_RINGINUSE	=> ST_RINGINUSE,
 	GS_EXT_ONHOLD		=> ST_ONHOLD,
+	GS_EXT_PAUSE		=> ST_PAUSE,
+	GS_EXT_REWORK		=> ST_REWORK,
 	GS_EXT_FWD		=> ST_FWD
 );
 
@@ -644,8 +669,12 @@ window.onload=page_init
 
 if ($action == "") {
 
+//echo "<pre>";
+//print_r($groups);
+//echo "</pre>";
+
 	$fullscreen = (int) @$_REQUEST['f'];
-	
+
 	if ($extmon_data['tabs'] === True)
 		foreach ($groups as $group => $group_data) {
 			if ($group_data['id'] != $tab) {
@@ -675,6 +704,11 @@ if ($action == "") {
 		
 
 		$rs = $DB->execute( $sql_query );
+
+		//echo '<pre>';
+		//print_r($group_data['id']);
+		//echo '</pre>';
+
 		$group_members = array();
 		if ($rs) {
 			while ($r = $rs->fetchRow()) {
@@ -686,7 +720,7 @@ if ($action == "") {
 				if (!array_key_exists('groups', $peers[$r['ext']])) {
 					$peers[$r['ext']]['groups'] = array();
 				}
-				
+
 				$peers[$r['ext']]['host'] = $r['host'];
 				$peers[$r['ext']]['groups'][$group] = True;
 				$member['name'] = '';
@@ -712,7 +746,8 @@ if ($action == "") {
 					if ($groups[$group]['display_name'] == 7)
 						$member['name'] .= htmlEnt(substr($r['firstname'],0,1)).'.'.htmlEnt(substr($r['lastname'],0,1)).'.';
 				}
-				$display_right = '';
+				// need a id tag for agentstatus
+				$display_right = '<span style="float:right;" id=q' .$group_data['id'] . '_sa' .$r['ext']. '>&nbsp;</span>';
 
 				if (array_key_exists('display_comment',$groups[$group])) {
 					if ($r['user_comment']) {
@@ -733,8 +768,9 @@ if ($action == "") {
 							$display_right = '<i>'.htmlEnt(substr($r['user_comment'],0,$max_chars)).'</i>';
 						}
 					}
+					$dialplay_right = '<br><span style="float:right;" >'. $display_right .'</span>';
 				}
-				
+
 				if (array_key_exists('display_forw',$groups[$group])) {
 					$ext_active = $peers[$r['ext']]['callfw']['external']['always']['active'];
 					$int_active = $peers[$r['ext']]['callfw']['internal']['always']['active'];
@@ -743,46 +779,50 @@ if ($action == "") {
 					
 					if ($groups[$group]['display_forw'] == 1) {
 						if ($int_active == 'par' )
-							$display_right .= '&#8649;';
+							$display_right = '&#8649;';
 						else if ($int_active == 'vml' )
-							$display_right .= '&#9993;';
+							$display_right = '&#9993;';
 						else if ($int_active != 'no' )
-							$display_right .= '&#8627;';
+							$display_right = '&#8627;';
 					}
 					else if ($groups[$group]['display_forw'] == 2) {
 						if ($ext_active == 'par' )
-							$display_right .= '&#8649;';
+							$display_right = '&#8649;';
 						else if ($ext_active == 'vml' )
-							$display_right .= '&#9993;';
+							$display_right = '&#9993;';
 						else if ($ext_active != 'no')
-							$display_right .= '&#8627;';
+							$display_right = '&#8627;';
 					}
 					else if ($groups[$group]['display_forw'] == 3) {
-						if ($int_active == 'par' && $ext_active == 'par' ) $display_right .= '&#8649;';
+						if ($int_active == 'par' && $ext_active == 'par' ) $display_right = '&#8649;';
 						else
-						if ($int_active == 'vml' && $ext_active == 'vml' ) $display_right .= '&#9993;';
+						if ($int_active == 'vml' && $ext_active == 'vml' ) $display_right = '&#9993;';
 						else
-						if (($int_active == 'std' || $int_active == 'var') && ($ext_active == 'std' || $ext_active == 'var')) $display_right .= '&#8627;';
+						if (($int_active == 'std' || $int_active == 'var') && ($ext_active == 'std' || $ext_active == 'var')) $display_right = '&#8627;';
 						else {
-							if ($int_active != 'no') $display_right .= '&#8614;';
-							if ($int_active == 'par') $display_right .= '&#8649;';
-							if ($int_active == 'vml') $display_right .= '&#9993;';
-							if ($ext_active != 'no') $display_right .= '&#8677;';
-							if ($ext_active == 'par') $display_right .= '&#8649;';
-							if ($ext_active == 'vml') $display_right .= '&#9993;';
+							if ($int_active != 'no') $display_right = '&#8614;';
+							if ($int_active == 'par') $display_right = '&#8649;';
+							if ($int_active == 'vml') $display_right = '&#9993;';
+							if ($ext_active != 'no') $display_right = '&#8677;';
+							if ($ext_active == 'par') $display_right = '&#8649;';
+							if ($ext_active == 'vml') $display_right = '&#9993;';
 						}
 					}
 
-					if ($display_right) $member['name'] .= '<span style="float:right;">'.$display_right.'</span>';
+					if ($display_right) $member['name'] .= '<br><span style="float:right;">'.$display_right.'</span>';
 				}
-				
+
 				$member['ext'] = $r['ext'];
 				$group_members[] = $member;
+
 			}
 		}
 		$groups[$group]['members'] = $group_members;
 	}
 
+	//echo '<pre>';
+	//print_r($peers);
+	//echo '</pre>';
 
 	$extmon_data['extensions'] = $peers;
 	$extmon_data['colors'] = $colors;
@@ -795,7 +835,9 @@ var http = false;
 var counter = 0;
 var counter_fail = 0;
 var timestamp = 0;
+var is_pause = 0;
 var colors = new Array();
+var color_names = new Array();
 var members = new Array();
 var callfw = new Array();
 var progress = new Array('&#9676;', '&#9684;', '&#9681;', '&#9685;', '&#9673;');
@@ -805,6 +847,10 @@ var progress = new Array('&#9676;', '&#9684;', '&#9681;', '&#9685;', '&#9673;');
 	echo "colors['$key'] = '$value';\n";
 	}
 	
+	foreach ($color_names as $key => $value) {
+	echo "color_names['$key'] = '$value';\n";
+	}
+
 	foreach ($peers as $peer => $peer_data) {
 		$groups_str = '\''.implode('\',\'', array_keys($peer_data['groups'])).'\'';
 		echo "members['$peer'] = new Array($groups_str);\n";
@@ -820,6 +866,7 @@ var progress = new Array('&#9676;', '&#9684;', '&#9681;', '&#9685;', '&#9673;');
 		}
 		
 		echo "callfw['$peer'] = ".$callfw.";\n";
+
 	}
 	echo 'var status_url = \'', GS_URL_PATH, 'srv/extensionstatus.php?t=\';';
 ?>
@@ -859,11 +906,18 @@ function read_data()
 					if (exten in members) {
 						for ( var queue in members[exten]) {
 							var el_obj = document.getElementById('q'+members[exten][queue]+'_'+key);
+							var el_obj_s = document.getElementById('q'+members[exten][queue]+'_s'+key);
+							//console.log(el_obj_s);
 							if (el_obj) {
-								if ((ret_arr[key] == 0 || ret_arr[key] == 4) && (callfw[exten] != 0))
+								if ((ret_arr[key] != 4) && (callfw[exten] != 0)) {
 									el_obj.style.background = colors[32];
-								else
+								}
+								else {
 									el_obj.style.background = colors[ret_arr[key]];
+								}
+							}
+							if (el_obj_s) {
+									el_obj_s.innerHTML = color_names[ret_arr[key]];
 							}
 						}
 					}

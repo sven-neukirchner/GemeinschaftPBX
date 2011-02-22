@@ -7,6 +7,7 @@
 define( 'GS_VALID', true );
 require_once( dirName(__FILE__) .'/../../../inc/conf.php' );
 require_once( GS_DIR .'inc/sbclient.php' );
+include_once( GS_DIR .'inc/gs-fns/gs_agentstate_get.php');
 
 function return_error($errcode, $errstr)
 {
@@ -35,12 +36,17 @@ function get_data_from_server($host, $port, $extensions)
 			$i = 0;
 			foreach($extensions as $extension) {
 				if ($line != '') $line .= ',';
+				$extstate = gs_agentstate_get_by_ext($extension);
+				//var_dump($extstate);
+				if ($extstate != 0)	$message['data']['states'][$i] = $extstate;
+				//var_dump($message);
 				if (array_key_exists($i, $message['data']['states'])) {
 					$line .= '[\'a'.$extension.'\', \''.$message['data']['states'][$i].'\']';
 				} else {
 					$line .= '[\'a'.$extension.'\', \'255\']';
 				}
 				++$i;
+
 			}
 		}
 	}
@@ -92,6 +98,8 @@ ini_set('session.entropy_length', 0);
 
 session_name('gemeinschaft');
 session_start();
+
+ //var_dump($_SESSION[extmon]);
 
 if (@$_REQUEST['t'] == 'm') {
 	if (@$_SESSION['extmon']['servers']) {

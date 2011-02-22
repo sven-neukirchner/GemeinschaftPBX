@@ -38,6 +38,8 @@ define( 'GS_EXT_OFFLINE',	4);  # all devices unreachable/not registered
 define( 'GS_EXT_RINGING',	8);  # one or more devices ringing
 define( 'GS_EXT_RINGINUSE',	9);  # ringing and in use
 define( 'GS_EXT_ONHOLD',	16); # all devices on hold
+define( 'GS_EXT_PAUSE',	64); # agent in pause (agent state 2)
+define( 'GS_EXT_REWORK',	128); # agent on Rework (agent state 3)
 
 define( 'ST_FREE',		'#fffd3b');
 define( 'ST_INUSE',		'#00fd02');
@@ -46,6 +48,8 @@ define( 'ST_RINGING',		'#008000');
 define( 'ST_RINGINUSE',		'#0080FF');
 define( 'ST_UNKNOWN',		'#ff5c43');
 define( 'ST_ONHOLD',		'#fd02fd');
+define( 'ST_PAUSE',		'#fd8005');
+define( 'ST_REWORK',		'#05fdba');
 
 define( 'CQ_DESKTOP_BG',	'#ffffff');
 define( 'CQ_WINDOW_BG',		'#d4d0c7');
@@ -479,11 +483,13 @@ if ($rs->numRows() == 1) {
 $color_names = array(
 	GS_EXT_UNKNOWN 		=> 'unbekannt',
 	GS_EXT_IDLE		=> 'frei',
-	GS_EXT_INUSE		=> 'anruf',
+	GS_EXT_INUSE		=> 'Anruf',
 	GS_EXT_BUSY		=> 'besetzt',
 	GS_EXT_OFFLINE		=> 'offline',
 	GS_EXT_RINGING		=> 'klingelt',
 	GS_EXT_RINGINUSE	=> 'anklopfen',
+	GS_EXT_PAUSE		=> _('Pause'),
+	GS_EXT_REWORK		=> _('Nacharbeit'),
 	GS_EXT_ONHOLD		=> 'halten'
 );
 
@@ -495,6 +501,8 @@ $colors = array(
 	GS_EXT_OFFLINE		=> ST_OFFLINE,
 	GS_EXT_RINGING		=> ST_RINGING,
 	GS_EXT_RINGINUSE	=> ST_RINGINUSE,
+	GS_EXT_PAUSE		=> ST_PAUSE,
+	GS_EXT_REWORK		=> ST_REWORK,
 	GS_EXT_ONHOLD		=> ST_ONHOLD
 );
 
@@ -906,6 +914,10 @@ WHERE '.
 	$members = array();
 	$rs = $DB->execute( $sql_query );
 	
+	//echo '<pre>';
+	//print_r($rs);
+	//echo '</pre>';
+
 	if ($rs) {
 		while ($r = $rs->fetchRow()) {
 			$member = array();
@@ -932,8 +944,8 @@ WHERE '.
 				if ($queues[$r['queue']]['display_name'] == 7)
 					$member['name'] .= htmlEnt(substr($r['firstname'],0,1)).'.'.htmlEnt(substr($r['lastname'],0,1)).'.';
 			}
-
 			
+			$member['name'] .= '<br><span style="float:right;" id=q' .$queues[$r['queue']]['ext'] . '_sa' .$r['ext']. '>&nbsp;</span>';
 			$member['ext'] = $r['ext'];
 			if (!array_key_exists($r['queue'], $members))
 				$members[$r['queue']] = array();
@@ -985,12 +997,17 @@ var counter = 0;
 var counter_fail = 0;
 var timestamp = 0;
 var colors = new Array();
+var color_names = new Array();
 var members = new Array();
 var progress = new Array('&#9676;', '&#9684;', '&#9681;', '&#9685;', '&#9673;');
 
 <?php
 	foreach ($colors as $key => $value) {
 	echo "colors['$key'] = '$value';\n";
+	}
+
+	foreach ($color_names as $key => $value) {
+	echo "color_names['$key'] = '$value';\n";
 	}
 
 	foreach ($member_extensions as $extension => $exteinsion_data) {
@@ -1036,7 +1053,9 @@ function read_data()
 					if (exten in members) {
 						for ( var queue in members[exten]) {
 							var el_obj = document.getElementById('q'+members[exten][queue]+'_'+key);
+							var el_obj_s = document.getElementById('q'+members[exten][queue]+'_s'+key);
 							if (el_obj) el_obj.style.background = colors[ret_arr[key]];
+							if (el_obj_s) el_obj_s.innerHTML = color_names[ret_arr[key]];
 						}
 					}
 				}
