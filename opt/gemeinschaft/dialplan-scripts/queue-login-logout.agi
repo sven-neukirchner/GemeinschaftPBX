@@ -107,7 +107,10 @@ if ($action === 'login') {
 elseif ($action === 'logout') {
 		// Tell user that he can NOT log out, because he is a static agent
 		// FIXME: Voicepromt needed?
-	if (queue_static_agent( $queue_id, $user_id)) exit();
+	if (queue_static_agent( $queue_id, $user_id)) {
+		gs_agi_verbose('##### Agent is a static member, logout not possible');
+		exit();
+	}
 	$agent_on = $db->executeGetOne('SELECT count(`_queue_id`) FROM `ast_queue_members` WHERE `_queue_id` ='.$queue_id);
 	$min_agent = $db->executeGetOne('SELECT `_min_agents` FROM `ast_queues` WHERE `_id`='.$queue_id);
 		if ($agent_on > $min_agent) {
@@ -115,15 +118,13 @@ elseif ($action === 'logout') {
 			gs_agi_set_variable( 'agent_login_status', 'loggedout' );
 
 			// check if this is agents last queue and delete agent state
-			$num_agent_queues = (int)$db->executeGetOne( 'SELECT COUNT(*) FROM `ast_queue_members` WHERE `_user_id`='. $user_id);
-			gs_agi_verbose('##### Agent is loggedin on ' .$num_agent_queues.' queues' , 1);
-			if ($num_agent_queues == 0) {
+			$num_agent_queues = (int)$db->executeGetOne( 'SELECT COUNT(*) FROM `ast_queue_members` WHERE `_user_id`='. $user_id );
+			if ($num_agent_queues > 0) {
+				gs_agi_verbose('##### Agent is loggedin on ' .$num_agent_queues.' queues' , 1);
+			} else {
 				$db->execute( 'DELETE FROM `agent_state` WHERE `_user_id`='. $user_id );
 			}
-		} else {
-			exit();
 		}
-	
 }
 elseif ($action === 'logoutall') {
 	// Only logout from queue, when we are NOT a static agent
@@ -155,11 +156,15 @@ elseif ($action === 'logoutall') {
 	}
 	// Only O.K. if all logoffs did work
 	if ($logoff_ok === 0) {
-	gs_agi_set_variable( 'agent_login_status', 'loggedout' );
-	//delete agent state
-	$db->execute( 'DELETE FROM `agent_state` WHERE `_user_id`='. $user_id );
+		gs_agi_set_variable( 'agent_login_status', 'loggedout' );
 	}
 	$ami->ami_logout();
+	$num_agent_queues = (int)$db->executeGetOne( 'SELECT COUNT(*) FROM `ast_queue_members` WHERE `_user_id`='. $user_id .' AND `static` = 1');
+	if ($num_agent_queues > 0) {
+		gs_agi_verbose('##### Agent is a static member in one or more queue(s)',1);
+	} else {
+		$db->execute( 'DELETE FROM `agent_state` WHERE `_user_id`='. $user_id );
+	}
 }
 
 elseif ($action === 'loginall') {
@@ -211,5 +216,6 @@ function queue_static_agent( $q, $u)
 		return false;
 	}
 }
+
 
 ?>

@@ -604,7 +604,7 @@ macro agent-pause() {
 	}
 	if ("${last_agent_state}" = "3") {   // agent was in review
 		Verbose(1,### Agent was on REVIEW and is now in PAUSE);
-		System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||fake|" >> /var/log/asterisk/queue_log );
+		System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||custom|" >> /var/log/asterisk/queue_log );
 	}
 
 	Playback(/usr/share/asterisk/sounds/custom/pause);
@@ -633,7 +633,7 @@ macro agent-unpause() {
 	}
 	if ("${last_agent_state}" = "3") {   // agent was in review
 	Verbose(1,### Agent was in REVIEW and is now Online);
-	System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||fake|" >> /var/log/asterisk/queue_log );
+	System(echo  "${EPOCH}|${call_id_on_review}|${answered_queue}|SIP/${user_name}|REVIEW_END|||custom|" >> /var/log/asterisk/queue_log );
 	UnpauseQueueMember(,SIP/${user_name});
 	}
 

@@ -1320,7 +1320,7 @@ context to-internal-users-self {
              Set(review_start=${EPOCH});
              TrySystem(/opt/gemeinschaft/dialplan-scripts/agent-set-review '${user_name}' '${review_start}' '${UNIQUEID}');
              PauseQueueMember(,${MEMBERINTERFACE});
-             System(echo  "${review_start}|${UNIQUEID}|${QUEUE_EXTEN}|${MEMBERINTERFACE}|REVIEW_START|||fake|" >> /var/log/asterisk/queue_log );
+             System(echo  "${review_start}|${UNIQUEID}|${QUEUE_EXTEN}|${MEMBERINTERFACE}|REVIEW_START|||custom|" >> /var/log/asterisk/queue_log );
           }
          }
 	}
