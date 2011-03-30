@@ -7725,7 +7725,34 @@ CREATE TABLE IF NOT EXISTS `agent_state` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 
+--
+-- Table structure for table `_fsc_groups`
+--
+
+CREATE TABLE IF NOT EXISTS `_fsc_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order` smallint(6) NOT NULL,
+  `title` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `description` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `company` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `location` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `country` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `language` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `project` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
+  `svl_time` int(10) NOT NULL,
+  `svl_percent` int(10) NOT NULL DEFAULT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ;
 
 
 
+--
+-- Table structure for table `_fsc_groups_member`
+--
+
+CREATE TABLE IF NOT EXISTS `_fsc_groups_member` (
+  `_group_id` mediumint(8) unsigned NOT NULL,
+  `_queue_id` mediumint(8) unsigned NOT NULL,
+  PRIMARY KEY (`_group_id`,`_queue_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
