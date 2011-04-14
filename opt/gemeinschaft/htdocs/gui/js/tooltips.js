@@ -100,7 +100,7 @@ var Tooltip = {
 			el1.setAttribute('id', 'tooltip-top');
 			el.style.margin = '0px';
 			el1.style.padding = '30px 8px 0px 8px';
-			el1.style.background = 'transparent url(img/tooltip.gif) no-repeat top';
+			el1.style.background = 'transparent url(/gemeinschaft/img/tooltip.gif) no-repeat top';
 			el.style.color = '#000';
 			el.style.textDecoration = 'none';
 			el.style.textAlign = 'center';
@@ -113,7 +113,7 @@ var Tooltip = {
 			el.style.margin = '0px';
 			el.style.padding = '0px';
 			el2.style.height = '13px';
-			el2.style.background = 'transparent url(img/tooltip.gif) no-repeat bottom';
+			el2.style.background = 'transparent url(/gemeinschaft/img/tooltip.gif) no-repeat bottom';
 			el.appendChild(el2);
 		}
 		return el;
