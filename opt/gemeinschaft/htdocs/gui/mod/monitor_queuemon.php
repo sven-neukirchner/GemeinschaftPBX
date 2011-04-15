@@ -149,7 +149,8 @@ function queue_waitmin($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT MIN(`waittime`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event` IN (\'_COMPLETE\', \'_EXIT\')
+	AND `waittime` IS NOT NULL 
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 
@@ -167,7 +168,8 @@ function queue_waitavg($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT AVG(`waittime`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event` IN (\'_COMPLETE\', \'_EXIT\')
+	AND `waittime` IS NOT NULL
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 
@@ -183,7 +185,8 @@ function queue_waitmax($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT MAX(`waittime`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event` IN (\'_COMPLETE\', \'_EXIT\')
+	AND `waittime` IS NOT NULL
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 	
@@ -199,7 +202,7 @@ function queue_callavg($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT AVG(`calldur`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event`=\'_COMPLETE\'
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 
@@ -215,7 +218,7 @@ function queue_callmax($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT MAX(`calldur`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event`=\'_COMPLETE\'
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 
@@ -231,7 +234,7 @@ function queue_callmin($queue_id, $last_min)
 	$ret = (int)@$CDR_DB->executeGetOne(
 	'SELECT MIN(`calldur`) FROM `queue_log` WHERE
 	`queue_id`='. $queue_id .'
-	AND `event`=\'_EXIT\'
+	AND `event`=\'_COMPLETE\'
 	AND `reason`<>\'INCOMPAT\'
 	AND '. $sql_time);
 
@@ -1151,9 +1154,9 @@ window.onload=data_reload
 		if ($queue_data['display_wait_max'])	$stats[] = '&#9719; &#8657; '._secs_to_minsecs(queue_waitmax($queue_data['id'], $queue_data['display_wait_max']));
 		if ($queue_data['display_wait_min'])	$stats[] = '&#9719; &#8659; '._secs_to_minsecs(queue_waitmin($queue_data['id'], $queue_data['display_wait_min']));
 		if ($queue_data['display_wait_avg'])	$stats[] = '&#9719; &#216; '._secs_to_minsecs(queue_waitavg($queue_data['id'], $queue_data['display_wait_avg']));
-		if ($queue_data['display_call_max'])	$stats[] = '&#9742; &#8657 '._secs_to_minsecs(queue_callmax($queue_data['id'], $queue_data['display_call_max']));
+		if ($queue_data['display_call_max'])	$stats[] = '&#9742; &#8657; '._secs_to_minsecs(queue_callmax($queue_data['id'], $queue_data['display_call_max']));
 		if ($queue_data['display_call_min'])	$stats[] = '&#9742; &#8659;'._secs_to_minsecs(queue_callmin($queue_data['id'], $queue_data['display_call_min']));
-		if ($queue_data['display_call_avg'])	$stats[] = '&#9742; &#216 '._secs_to_minsecs(queue_callavg($queue_data['id'], $queue_data['display_call_avg']));
+		if ($queue_data['display_call_avg'])	$stats[] = '&#9742; &#216; '._secs_to_minsecs(queue_callavg($queue_data['id'], $queue_data['display_call_avg']));
 
 		
 
