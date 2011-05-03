@@ -117,6 +117,7 @@ if ($action == 'unpause') {
    	{
 	 $rs = $db->execute( 'UPDATE `agent_state` SET `state`='. $new_agent_state .', `timestamp`='. $now .', `queue_name`=0, `ast_call_id`=0   WHERE `_user_id`='. $user_id );
      if(! @$rs) gs_agi_err( 'Coult not set new agent status' );  
+     $review_time = $now-$review_start;
 	}
 	
 	
@@ -127,6 +128,7 @@ echo 'SET VARIABLE new_agent_state '. gs_agi_str_esc($new_agent_state) ."\n";
 
 echo 'SET VARIABLE answered_queue '. gs_agi_str_esc($last_queue) ."\n";
 echo 'SET VARIABLE review_start '. gs_agi_str_esc($review_start) ."\n";  
+echo 'SET VARIABLE review_time '. gs_agi_str_esc($review_time) ."\n";  
 echo 'SET VARIABLE call_id_on_review '. gs_agi_str_esc($last_call_id) ."\n";    
 
     
