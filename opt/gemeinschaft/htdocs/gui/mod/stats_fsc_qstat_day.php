@@ -99,6 +99,7 @@ for ($i=-3; $i<=0; ++$i) {
   $y         = (int)date('Y', $t);                        // year of selected month 
   $m         = (int)date('n', $t);                        // month of selected  month
   $mdisplay  = date('m', $t);                       	 // month of selected  month  for report
+  $ddisplay  = date('d', $t);                       	 // day of selected  month  for report
 
   $day_t_start = (int)mkTime(  0, 0, 0 , $m,$day_d,$y );
   $day_t_end   = (int)mkTime( 23,59,59 , $m,$day_d,$y );
@@ -302,7 +303,7 @@ while ($r = $rs->fetchrow()) {
 
 	echo '<tr>', "\n";
 	echo '<td>', $number_queues ,'</td>', "\n";
-	echo '<td>', $day_d ,'.', $mdisplay ,'.', $y ,'</td>', "\n";
+	echo '<td>', $ddisplay ,'.', $mdisplay ,'.', $y ,'</td>', "\n";
 	echo '<td>', $r['company'] ,'</td>', "\n";
 	echo '<td>', $r['location'] ,'</td>', "\n";
 	echo '<td>', $r['country'] ,'</td>', "\n";

@@ -203,6 +203,7 @@ $MODULES['stats'    ]=  array(
 		'fsc_groups'  	   => array('title' => __('FSC Gruppen'), 'id' => 11006),
 		'fsc_qstat_day'    => array('title' => __('FSC Tagesstatistik'), 'id' => 11007),
 		'fsc_qstat_month'  => array('title' => __('FSC Monatsstatistik'), 'id' => 11008),
+		'tph_qstat_day'  => array('title' => __('TPH Tagesstatistik'), 'id' => 11008), 
 		'callvolume'   => array('title' => __('Gespr.-Volumen'), 'id' => 11002)
 	)
 );

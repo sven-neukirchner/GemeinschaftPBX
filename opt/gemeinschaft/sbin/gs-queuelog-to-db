@@ -291,7 +291,7 @@ function log_line_to_db_entry( $line )
 			break;
 		case 'REVIEW_END':
 			$row['evt'     ] = '_REVIEW_END';
-			$row['info'] = $d3;
+			$row['calldur'] = $d3;
 		/*
 		default:
 			# insert event name as is

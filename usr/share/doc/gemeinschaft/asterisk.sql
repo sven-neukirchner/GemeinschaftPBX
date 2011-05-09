@@ -7756,3 +7756,28 @@ CREATE TABLE IF NOT EXISTS `_fsc_groups_member` (
   PRIMARY KEY (`_group_id`,`_queue_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+
+
+--
+-- Tabellenstruktur für Tabelle `_stat_groups`
+--
+
+CREATE TABLE IF NOT EXISTS `_stat_groups` (
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) CHARACTER SET ascii NOT NULL,
+  `title` varchar(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `title` (`title`(25))
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--
+-- Tabellenstruktur für Tabelle `_stat_group_members`
+--
+
+CREATE TABLE IF NOT EXISTS `_stat_group_members` (
+  `_group_id` mediumint(8) unsigned NOT NULL,
+  `_member_id` mediumint(8) unsigned NOT NULL,
+  PRIMARY KEY (`_group_id`,`_member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
