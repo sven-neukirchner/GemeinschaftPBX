@@ -102,11 +102,11 @@ for ($i=-3; $i<=0; ++$i) {
   $num_days  = (int)date('t', $t);                      	// num_days of selected month 
   $y         = (int)date('Y', $t);                        // year of selected month 
   $m         = (int)date('n', $t);                        // month of selected  month
-  $mdisplay  = date('m', $t);                       	 // month of selected  month  for report
-  $ddisplay  = date('d', $t);                       	 // day of selected  month  for report 
 
   $day_t_start = (int)mkTime(  0, 0, 0 , $m,$day_d,$y );
   $day_t_end   = (int)mkTime( 23,59,59 , $m,$day_d,$y );
+  $mdisplay  = date('m', $day_t_start);                       	 // month of selected  month  for report
+  $ddisplay  = date('d', $day_t_start);                       	 // day of selected  month  for report 
   $sql_time    = '(`timestamp`>='.$day_t_start .' AND `timestamp`<='.$day_t_end .')';
 
 
