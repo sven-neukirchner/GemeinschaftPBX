@@ -566,6 +566,7 @@ macro queue-logout-all() {
 	AGI(/opt/gemeinschaft/dialplan-scripts/queue-login-logout.agi,${user_name},0,logoutall);
 	return;
 }
+/*
 context queues-login-logout {
 	*5    => &queue-login-all();
 	*5*   => &queue-logout-all();
@@ -578,7 +579,7 @@ context queues-login-logout {
 	_*5XXXXX* => &queue-logout(${EXTEN:2:-1});
 	_*5XXXXXX* => &queue-logout(${EXTEN:2:-1});
 }
-
+*/
 //---------------------------------------------------------------------
 //  Agent Pause/Unpause
 //---------------------------------------------------------------------
